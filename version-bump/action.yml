@@ -1,0 +1,29 @@
+name: 'version-bump'
+description: 'Calculates the next version of the project based on existing tags and bump type'
+
+inputs:
+  github-token:
+    description: 'GitHub token for accessing the API (optional, defaults to GITHUB_TOKEN)'
+    required: false
+    default: ${{ github.token }}
+  prefix:
+    description: 'Prefix for version tags (e.g., "v" for v1.0.0)'
+    required: false
+    default: 'v'
+  repo:
+    description: 'GitHub repository in owner/repo format (optional, defaults to current repository)'
+    required: false
+    default: ${{ github.repository }}
+  bump:
+    description: 'Bump type (major, minor, patch, build, milestone, calver, calver-milestone)'
+    required: true
+
+outputs:
+  next-tag:
+    description: 'The calculated next tag (e.g. `v1.2.3`)'
+  next-version:
+    description: 'The calculated next version (e.g. `1.2.3`)'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js'

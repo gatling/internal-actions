@@ -1,0 +1,22 @@
+{
+  "name": "version-bump",
+  "version": "1.0.0",
+  "description": "Calculates the next version of the project based on existing tags and bump type.",
+  "main": "dist/index.js",
+  "scripts": {
+    "type-check": "tsc --noEmit",
+    "build": "tsc && ncc build src/index.ts -o dist",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@actions/core": "1.11.1",
+    "@actions/github": "6.0.1"
+  },
+  "devDependencies": {
+    "@types/jest": "30.0.0",
+    "@vercel/ncc": "0.38.3",
+    "jest": "30.0.5",
+    "ts-jest": "29.4.0",
+    "typescript": "5.8.3"
+  }
+}

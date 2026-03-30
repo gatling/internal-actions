@@ -1,0 +1,117 @@
+name: Release Action
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action name'
+        type: choice
+        options:
+          - version-bump
+        required: true
+      bump:
+        description: 'Bump type'
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+        required: true
+        default: 'patch'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set variables
+        id: vars
+        working-directory: ${{ github.event.inputs.action }}
+        env:
+          ACTION: ${{ github.event.inputs.action }}
+          BUMP: ${{ github.event.inputs.bump }}
+        run: |
+          echo "action_name=$ACTION" >> $GITHUB_OUTPUT
+          echo "bump_type=$BUMP" >> $GITHUB_OUTPUT
+          echo "action_path=$ACTION" >> $GITHUB_OUTPUT
+          if [ -f package.json ]; then
+            echo "is_javascript=true" >> $GITHUB_OUTPUT
+          else
+            echo "is_javascript=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 20
+
+      - name: Install JS dependencies
+        if: ${{ steps.vars.outputs.is_javascript == 'true' }}
+        working-directory: ${{ github.event.inputs.action }}
+        run: npm ci
+
+      - name: Build TypeScript
+        if: ${{ steps.vars.outputs.is_javascript == 'true' }}
+        working-directory: ${{ github.event.inputs.action }}
+        run: npm run build
+
+      - uses: gatling/private-actions@version-bump/v1
+        id: version-bump
+        with:
+          prefix: "${{ github.event.inputs.action }}/v"
+          bump: "${{ github.event.inputs.bump }}"
+
+      - name: Prepare release folder
+        id: release-folder
+        env:
+          IS_JAVASCRIPT: ${{ steps.vars.outputs.is_javascript }}
+          ACTION: ${{ github.event.inputs.action }}
+        run: |
+          folder="$(mktemp -d)"
+          if [ "$IS_JAVASCRIPT" = "true" ]; then
+            cp -r "$ACTION/dist" "$folder"
+          fi
+          cp "$ACTION/action.yml" "$folder"
+          echo "folder=$folder" >> $GITHUB_OUTPUT
+
+      - name: Commit and tag release
+        env:
+          ACTION: ${{ github.event.inputs.action }}
+          FOLDER: ${{ steps.release-folder.outputs.folder }}
+          ACTION_NAME: ${{ steps.vars.outputs.action_name }}
+          BUMP_FULL: ${{ steps.bump.outputs.full }}
+          NEXT_MAJOR: ${{ steps.version-bump.outputs.next-major }}
+          NEXT_MINOR: ${{ steps.version-bump.outputs.next-minor }}
+          NEXT_PATCH: ${{ steps.version-bump.outputs.next-patch }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          tmp_branch="release-tmp-$ACTION"
+          git checkout -b "$tmp_branch"
+          git rm -rf .
+          rm -rf ./*
+          cp -r "$FOLDER"/* .
+          git add .
+          git commit -m "Release $ACTION_NAME $BUMP_FULL"
+
+          base="$ACTION_NAME"
+          full="${base}/v$NEXT_MAJOR.$NEXT_MINOR.$NEXT_PATCH"
+          minor="${base}/v$NEXT_MAJOR.$NEXT_MINOR"
+          major="${base}/v$NEXT_MAJOR"
+
+          git tag -f "$full"
+          git tag -f "$minor"
+          git tag -f "$major"
+
+          git push origin "$full"
+          git push origin "$minor" --force
+          git push origin "$major" --force
