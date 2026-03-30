@@ -63,7 +63,7 @@ jobs:
         working-directory: ${{ github.event.inputs.action }}
         run: npm run build
 
-      - uses: gatling/private-actions@version-bump/v1
+      - uses: gatling/internal-actions@version-bump/v1
         id: version-bump
         with:
           prefix: "${{ github.event.inputs.action }}/v"
