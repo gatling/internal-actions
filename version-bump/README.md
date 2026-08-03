@@ -69,5 +69,5 @@ jobs:
 
 ## Prerequisites
 
-- Node.js 20 or higher.
+- Node.js 24 or higher.
 - TypeScript for compiling the action.
