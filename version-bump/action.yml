@@ -25,5 +25,5 @@ outputs:
     description: 'The calculated next version (e.g. `1.2.3`)'
 
 runs:
-  using: 'node20'
+  using: 'node24'
   main: 'dist/index.js'
