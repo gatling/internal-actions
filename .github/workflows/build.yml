@@ -2,10 +2,9 @@ name: Build
 
 on:
   pull_request:
+  push:
     branches:
       - main
-    paths:
-      - 'version-bump/**'
 
 permissions:
   contents: read
