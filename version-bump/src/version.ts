@@ -107,8 +107,7 @@ export function bumpVersion(version: Version, bumpType: BumpType): Version {
       };
       break;
     case 'calver':
-      const major = date.getFullYear();
-      const minor = getISOWeek(date);
+      const {year: major, week: minor} = getISOWeek(date);
       const patch = (version.major === major && version.minor === minor) ? (version.marker ? version.patch : version.patch + 1) : 0;
       bumped = {major, minor, patch};
       break;

@@ -196,20 +196,52 @@ describe('Version Utilities', () => {
 
     test('should bump calver', () => {
       const result = bumpVersion(baseVersion, 'calver');
-      const date = new Date();
-      expect(result.major).toEqual(date.getFullYear());
-      expect(result.minor).toEqual(getISOWeek(date));
+      const {year, week} = getISOWeek(new Date());
+      expect(result.major).toEqual(year);
+      expect(result.minor).toEqual(week);
       expect(result.patch).toEqual(0);
     });
 
     test('should bump calver-milestone', () => {
       const result = bumpVersion(baseVersion, 'calver-milestone');
-      const date = new Date();
-      expect(result.major).toEqual(date.getFullYear());
-      expect(result.minor).toEqual(getISOWeek(date));
+      const {year, week} = getISOWeek(new Date());
+      expect(result.major).toEqual(year);
+      expect(result.minor).toEqual(week);
       expect(result.patch).toEqual(0);
       expect(result.build).toBeUndefined();
       expect(result.marker).toMatch(/M(\d{12})/);
+    });
+
+    describe('calver around the new year', () => {
+      afterEach(() => {
+        jest.useRealTimers();
+      });
+
+      function today(year: number, month: number, day: number) {
+        jest.useFakeTimers();
+        jest.setSystemTime(new Date(year, month - 1, day, 12));
+      }
+
+      test('should take the ISO week-year in the last days of December', () => {
+        today(2025, 12, 30); // in 2026-W01
+        expect(bumpVersion({major: 2025, minor: 52, patch: 1}, 'calver')).toEqual({major: 2026, minor: 1, patch: 0});
+      });
+
+      test('should count on within a week that spans the new year', () => {
+        today(2027, 1, 2); // in 2026-W53
+        expect(bumpVersion({major: 2026, minor: 53, patch: 0}, 'calver')).toEqual({major: 2026, minor: 53, patch: 1});
+      });
+
+      test('should number the first ISO week of a year whose 4 January is a Monday as week 1', () => {
+        today(2027, 1, 4); // in 2027-W01
+        expect(bumpVersion({major: 2026, minor: 53, patch: 1}, 'calver')).toEqual({major: 2027, minor: 1, patch: 0});
+      });
+
+      test('should give a milestone the ISO week-year and a marker of the calendar date', () => {
+        today(2025, 12, 30); // in 2026-W01
+        expect(bumpVersion({major: 2025, minor: 52, patch: 1}, 'calver-milestone'))
+          .toEqual({major: 2026, minor: 1, patch: 0, marker: 'M202512301200'});
+      });
     });
 
     test('should throw for invalid bump type', () => {

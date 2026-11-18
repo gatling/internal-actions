@@ -55,7 +55,7 @@ jobs:
 
 | Name           | Description                                                                     |
 |----------------|---------------------------------------------------------------------------------|
-| `next-version` | The calculated next version (e.g., `v1.0.1`, `2025.30`, `v1.0.0+202507260007`). |
+| `next-version` | The calculated next version (e.g., `v1.0.1`, `2025.30.0`, `v1.0.0+202507260007`). |
 
 ## Bump Types
 
@@ -64,8 +64,10 @@ jobs:
 - **patch**: Increments the patch version (e.g., `v1.2.3` → `v1.2.4`).
 - **build**: Adds build metadata with a timestamp (e.g., `v1.2.3` → `v1.2.3+202507260007`).
 - **milestone**: Increments a milestone suffix (e.g., `v1.2.3-m1` → `v1.2.3-m2`).
-- **calver**: Uses calendar versioning with year and week (e.g., `2025.30`).
-- **calver-milestone**: Uses calendar versioning with a micro version (e.g., `2025.30.0`).
+- **calver**: Uses calendar versioning, `<ISO week-year>.<ISO week>.<counter>` (e.g., `2025.30.0`, then `2025.30.1` in the
+  same week). The ISO 8601 week-year is the year of the week's Thursday: the last days of December can be in week 1 of the
+  next year, and the first days of January in the last week of the year before.
+- **calver-milestone**: The version `calver` would give, followed by `-M<YYYYMMDDHHmm>` (e.g., `2025.30.0-M202507261200`).
 
 ## Prerequisites
 

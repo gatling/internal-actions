@@ -1,12 +1,20 @@
-export function getISOWeek(date: Date): number {
-  const tempDate = new Date(date.getTime());
-  tempDate.setHours(0, 0, 0, 0);
-  // Go to Thursday of the current week (ISO week)
-  tempDate.setDate(tempDate.getDate() + 3 - (tempDate.getDay() + 6) % 7);
-  // Compute the first week of year
-  const week1 = new Date(tempDate.getFullYear(), 0, 4);
-  // Compute the week number
-  return Math.round(((tempDate.getTime() - week1.getTime()) / 86400000 + 1) / 7) + 1;
+export interface ISOWeek {
+  year: number;
+  week: number;
+}
+
+/**
+ * The ISO 8601 week of a date. Weeks start on Monday and belong to the year of their Thursday, so week 1 is the week
+ * holding 4 January. Around the new year that year differs from the date's own: 2025-12-29 is in week 1 of 2026, and
+ * 2027-01-01 in week 53 of 2026.
+ */
+export function getISOWeek(date: Date): ISOWeek {
+  // The Thursday of the date's week, from the date's local calendar day, counted in UTC days, which are all 24 hours
+  // long: a local day across a daylight saving change is not
+  const thursday = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate() + 3 - (date.getDay() + 6) % 7));
+  const year = thursday.getUTCFullYear();
+  const dayOfYear = (thursday.getTime() - Date.UTC(year, 0, 1)) / 86400000;
+  return {year, week: Math.floor(dayOfYear / 7) + 1};
 }
 
 export function formatDateToYYYYMMDDHHmm(date: Date): string {
